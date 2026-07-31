@@ -5,14 +5,14 @@
 * GitHub-Name:: build4me2
 * Project:: Assignment 6 – Device Driver
 *
-* File:: phase3_test.c
+* File:: ioctl_test.c
 *
 * Description:: Focused verification tool for the Codex Micro driver's ioctl
 * control interface. It drives each request in turn and reports whether the
 * observed result matches what the driver promises, so a single run confirms
 * the dial round-trip, mode change, key press and drain, key remap, input
-* validation, and reset all behave. This is a development check; the full
-* demonstration application is built later.
+* validation, and reset all behave. This is a development check separate from
+* the full demonstration application.
 *
 **************************************************************/
 
