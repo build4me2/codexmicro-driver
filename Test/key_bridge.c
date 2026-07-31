@@ -22,9 +22,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <linux/uinput.h>
 
 #include "../Module/codexmicro.h"  /* the driver's request numbers and key slots */
+#include "uinput_bridge.h"         /* shared virtual-keyboard helper             */
 
 /*
  * Translating a friendly name to a key slot keeps the command line readable
@@ -39,85 +39,6 @@ static int slot_from_name(const char *name)
 	if (!strcmp(name, "newchat"))  return CODEX_KEY_NEW_CHAT;
 	if (!strcmp(name, "custom"))   return CODEX_KEY_CUSTOM;
 	return -1;
-}
-
-/*
- * Send one input event down the virtual keyboard. Every keystroke is expressed
- * as a small sequence of these, so isolating the single-event write keeps the
- * higher-level steps readable.
- */
-static void send_event(int ufd, int type, int code, int value)
-{
-	struct input_event ev;
-
-	memset(&ev, 0, sizeof(ev));
-	ev.type = type;
-	ev.code = code;
-	ev.value = value;
-	if (write(ufd, &ev, sizeof(ev)) < 0)
-		perror("write to uinput");
-}
-
-/*
- * Replay one keystroke as a real key: press, publish, release, publish. The
- * two publish markers are what tell the input layer that a complete key event
- * has been assembled, so the receiving program sees one clean keypress rather
- * than a dangling half-event.
- */
-static void inject_keystroke(int ufd, int keycode)
-{
-	send_event(ufd, EV_KEY, keycode, 1);      /* key down                */
-	send_event(ufd, EV_SYN, SYN_REPORT, 0);   /* commit the down event   */
-	send_event(ufd, EV_KEY, keycode, 0);      /* key up                  */
-	send_event(ufd, EV_SYN, SYN_REPORT, 0);   /* commit the up event     */
-}
-
-/*
- * Create a virtual keyboard the OS treats as real hardware. It must declare
- * that it produces key events and which keys it may send before it is created;
- * a generous range is enabled up front so any default or remapped keystroke can
- * be replayed without re-declaring. Returns an open handle, or -1 on failure.
- */
-static int open_virtual_keyboard(void)
-{
-	struct uinput_setup usetup;
-	int ufd;
-	int code;
-
-	ufd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
-	if (ufd < 0) {
-		perror("open /dev/uinput");
-		return -1;
-	}
-
-	/* Announce that this device emits key events, then enable the whole
-	 * common keycode range so no later remap can ask for a key we forgot to
-	 * turn on. */
-	ioctl(ufd, UI_SET_EVBIT, EV_KEY);
-	for (code = 0; code < 256; code++)
-		ioctl(ufd, UI_SET_KEYBIT, code);
-
-	memset(&usetup, 0, sizeof(usetup));
-	usetup.id.bustype = BUS_USB;
-	usetup.id.vendor  = 0x1234;
-	usetup.id.product = 0x5678;
-	strcpy(usetup.name, "Codex Micro Virtual Keys");
-
-	ioctl(ufd, UI_DEV_SETUP, &usetup);
-	ioctl(ufd, UI_DEV_CREATE);
-
-	/* The device node is created asynchronously; a brief pause lets the input
-	 * layer finish wiring it up before the first keystroke is sent, otherwise
-	 * the earliest event can be delivered before any listener is attached. */
-	sleep(1);
-	return ufd;
-}
-
-/* Tear down the virtual keyboard so it leaves no lingering input device. */
-static void close_virtual_keyboard(int ufd)
-{
-	ioctl(ufd, UI_DEV_DESTROY);
-	close(ufd);
 }
 
 /*
@@ -137,7 +58,7 @@ static void deliver_press(int devfd, int ufd, int slot)
 	}
 	while (ioctl(devfd, CODEX_GET_KEY, &keycode) == 0 && keycode >= 0) {
 		printf("injected keystroke code %d\n", keycode);
-		inject_keystroke(ufd, keycode);
+		uinput_inject(ufd, keycode);
 	}
 }
 
@@ -165,7 +86,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	ufd = open_virtual_keyboard();
+	ufd = uinput_open();
 	if (ufd < 0) {
 		close(devfd);
 		return 1;
@@ -190,7 +111,7 @@ int main(int argc, char **argv)
 		deliver_press(devfd, ufd, slot);
 	}
 
-	close_virtual_keyboard(ufd);
+	uinput_close(ufd);
 	close(devfd);
 	return 0;
 }

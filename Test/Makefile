@@ -44,7 +44,7 @@ CC=gcc
 CFLAGS= -g -I.
 LIBS =-l pthread
 DEPS = 
-OBJ = $(ROOTNAME)$(HW)$(FOPTION).o
+OBJ = $(ROOTNAME)$(HW)$(FOPTION).o mock_agent.o uinput_bridge.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS) 
