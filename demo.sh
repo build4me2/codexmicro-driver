@@ -1,10 +1,5 @@
 #!/bin/bash
 #**************************************************************
-#* Class::  CSC-415-01 Summer 2026
-#* Name:: Manisha Chand
-#* Student ID:: 924844476
-#* GitHub-Name:: build4me2
-#* Project:: Assignment 6 - Device Driver
 #*
 #* File:: demo.sh
 #*
@@ -61,4 +56,4 @@ sudo dmesg | grep codexmicro | tail -1
 echo
 echo "==== DEMO COMPLETE ===="
 echo "For the live colour dashboard, run:"
-echo "    cd Test && make && sudo ./Chand_Manisha_HW6_main"
+echo "    cd Test && make && sudo ./dashboard"

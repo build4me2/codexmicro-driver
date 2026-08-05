@@ -1,11 +1,6 @@
 /**************************************************************
-* Class::  CSC-415-01 Summer 2026
-* Name:: Manisha Chand
-* Student ID:: 924844476
-* GitHub-Name:: build4me2
-* Project:: Assignment 6 – Device Driver
 *
-* File:: Chand_Manisha_HW6_main.c
+* File:: dashboard.c
 *
 * Description:: Demonstration application for the Codex Micro device driver. It
 * is the agent-control surface a developer would use: it drives a simulated
