@@ -20,9 +20,9 @@ UNITDIR="${UNITDIR:-$HOME/.config/systemd/user}"
 echo "Building..."
 make >/dev/null
 
-echo "Installing binaries      -> $BINDIR"
+echo "Installing programs      -> $BINDIR"
 mkdir -p "$BINDIR"
-install -m 0755 codexmicrod codexmicro-notify "$BINDIR/"
+install -m 0755 codexmicrod codexmicro-notify codexmicro-doctor codexmicro-flash "$BINDIR/"
 
 echo "Installing systemd unit  -> $UNITDIR/codexmicrod.service"
 mkdir -p "$UNITDIR"
@@ -30,25 +30,23 @@ install -m 0644 systemd/codexmicrod.service "$UNITDIR/"
 
 cat <<EOF
 
-Installed. Remaining steps (these need root or your input):
+Installed. Remaining steps:
 
-  1. Device access (root, once):
-       - edit udev/99-codexmicro.rules with your device's idVendor/idProduct
-         (find via: udevadm info -q property /dev/hidrawN | grep -i id_)
-       - sudo install -m 0644 udev/99-codexmicro.rules /etc/udev/rules.d/
-       - sudo udevadm control --reload && sudo udevadm trigger
-       - replug the device (this creates /dev/codexmicro-pad)
+  1. Flash your pad (needs the QMK CLI + the device):
+       codexmicro-flash                 # or: codexmicro-flash <board>
 
-  2. Choose backend/device:
-       - edit ExecStart in $UNITDIR/codexmicrod.service
-         (default drives a real pad; use "--backend loopback" to try with none)
+  2. Give the pad access (root, once):
+       sudo codexmicro-doctor           # auto-detects it and writes the udev rule
+       then replug the pad (it appears as /dev/codexmicro-pad)
 
   3. Start the daemon:
        systemctl --user daemon-reload
        systemctl --user enable --now codexmicrod
+       (to try with no hardware, set "--backend loopback" in
+        $UNITDIR/codexmicrod.service first)
 
   4. Connect your LLM:
-       - merge adapters/claude-code/hooks.json into ~/.claude/settings.json
-       - make sure $BINDIR is on your PATH so codexmicro-notify is found
+       merge adapters/claude-code/hooks.json into ~/.claude/settings.json
+       (ensure $BINDIR is on your PATH so codexmicro-notify is found)
 
 EOF

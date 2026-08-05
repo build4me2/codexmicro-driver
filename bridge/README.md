@@ -29,7 +29,14 @@ make          # builds codexmicrod and codexmicro-notify
 
 To light a real pad, flash the QMK handler in [`firmware/`](firmware/) — a
 ~30-line `raw_hid_receive` that colors the agent keys from the host's reports.
-See [`firmware/README.md`](firmware/README.md).
+The easy path is:
+
+```bash
+codexmicro-flash              # generates a keymap from the board default + flashes
+sudo codexmicro-doctor        # auto-detects the pad and writes its udev rule
+```
+
+Details and per-board notes are in [`firmware/README.md`](firmware/README.md).
 
 ## Run the daemon
 
@@ -75,4 +82,6 @@ shared by the daemon, the client, and the firmware side.
 | `codexmicro_notify.c` | One-shot client adapters call to report status |
 | `adapters/` | Per-LLM hook configs (e.g. Claude Code) |
 | `firmware/` | QMK `raw_hid_receive` handler that colors the keys |
+| `codexmicro-flash` | Generate a keymap from the board default and flash |
+| `codexmicro-doctor` | Auto-detect the pad and write its udev rule |
 | `install.sh`, `systemd/`, `udev/` | User-service install + device access |

@@ -1,0 +1,66 @@
+#!/bin/bash
+#**************************************************************
+#* File:: codexmicro-flash
+#*
+#* Description:: Builds and flashes the agent-keys firmware onto a QMK board.
+#* Rather than ship a board-specific keymap that could have the wrong layout,
+#* it generates the keymap from the board's own default (which is correct for
+#* that board), drops in the agent-keys handler, adds the build rules it needs,
+#* and flashes. Usage: codexmicro-flash [board] [keymap-name]. Set
+#* CODEXMICRO_DRYRUN=1 to print the steps without running them.
+#*
+#**************************************************************
+
+set -e
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+BOARD="${1:-work_louder/micro}"
+KEYMAP="${2:-codexmicro}"
+DRYRUN="${CODEXMICRO_DRYRUN:-}"
+
+# Echo a command, and run it unless this is a dry run.
+run() {
+	echo "+ $*"
+	[ -n "$DRYRUN" ] || "$@"
+}
+
+if [ -z "$DRYRUN" ]; then
+	command -v qmk >/dev/null 2>&1 || {
+		echo "qmk CLI not found. Install it first: https://docs.qmk.fm/#/newbs_getting_started"
+		exit 1
+	}
+	QMK_HOME="$(qmk config user.qmk_home 2>/dev/null | sed 's/^[^=]*=//')"
+	[ -n "$QMK_HOME" ] || { echo "run 'qmk setup' first"; exit 1; }
+else
+	QMK_HOME="${QMK_HOME:-/path/to/qmk_firmware}"
+fi
+
+KMDIR="$QMK_HOME/keyboards/$BOARD/keymaps/$KEYMAP"
+echo "Board:  $BOARD"
+echo "Keymap: $KEYMAP"
+echo "Path:   $KMDIR"
+echo
+
+# Start from the board's own default keymap so the layout is always correct,
+# then add the agent-keys handler on top of it.
+run qmk new-keymap -kb "$BOARD" -km "$KEYMAP"
+run cp "$HERE/firmware/codexmicro_agent_keys.c" "$KMDIR/"
+
+# Make sure the rules the handler depends on are present, without duplicating
+# lines a re-run would add again.
+for line in 'RAW_ENABLE = yes' 'RGB_MATRIX_ENABLE = yes' 'SRC += codexmicro_agent_keys.c'; do
+	if [ -n "$DRYRUN" ]; then
+		echo "+ ensure rules.mk contains: $line"
+	elif ! grep -qF "$line" "$KMDIR/rules.mk" 2>/dev/null; then
+		echo "$line" >> "$KMDIR/rules.mk"
+		echo "+ added to rules.mk: $line"
+	fi
+done
+
+echo
+echo "Flashing (put the board in bootloader if it does not auto-reset)..."
+run qmk flash -kb "$BOARD" -km "$KEYMAP"
+
+echo
+echo "Done. If the colors land on the wrong keys, edit agent_led[] in"
+echo "$KMDIR/codexmicro_agent_keys.c and re-run."
