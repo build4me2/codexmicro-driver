@@ -1,0 +1,8 @@
+# Codex Micro bridge — give the local user access to the QMK macropad's Raw HID
+# node and a stable name for it.
+#
+# Replace VVVV / PPPP with your device's idVendor / idProduct, found via:
+#     udevadm info -q property /dev/hidrawN | grep -i id_
+# then: sudo udevadm control --reload && sudo udevadm trigger, and replug.
+
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="VVVV", ATTRS{idProduct}=="PPPP", TAG+="uaccess", SYMLINK+="codexmicro-pad"

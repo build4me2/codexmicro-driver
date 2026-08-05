@@ -1,0 +1,16 @@
+[Unit]
+Description=Codex Micro bridge daemon
+Documentation=https://github.com/build4me2/codexmicro-driver
+After=default.target
+
+[Service]
+Type=simple
+# Edit --backend / --device for your setup. /dev/codexmicro-pad is the stable
+# name the bundled udev rule gives the device. To try it with no hardware, use
+# "--backend loopback".
+ExecStart=%h/.local/bin/codexmicrod --backend hidraw --device /dev/codexmicro-pad
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

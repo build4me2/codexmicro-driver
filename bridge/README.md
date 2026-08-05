@@ -18,6 +18,19 @@ agent runner ──hook──► codexmicro-notify <agent> <status>
 make          # builds codexmicrod and codexmicro-notify
 ```
 
+## Install as a background service
+
+```bash
+./install.sh   # installs the binaries + a systemd user service, then prints
+               # the remaining root/config steps (udev rule, backend, hooks)
+```
+
+## Firmware (the device side)
+
+To light a real pad, flash the QMK handler in [`firmware/`](firmware/) — a
+~30-line `raw_hid_receive` that colors the agent keys from the host's reports.
+See [`firmware/README.md`](firmware/README.md).
+
 ## Run the daemon
 
 ```bash
@@ -61,3 +74,5 @@ shared by the daemon, the client, and the firmware side.
 | `codexmicrod.c` | Daemon: socket intake → color → device backend |
 | `codexmicro_notify.c` | One-shot client adapters call to report status |
 | `adapters/` | Per-LLM hook configs (e.g. Claude Code) |
+| `firmware/` | QMK `raw_hid_receive` handler that colors the keys |
+| `install.sh`, `systemd/`, `udev/` | User-service install + device access |
