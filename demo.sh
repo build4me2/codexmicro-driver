@@ -25,7 +25,13 @@ cd "$(dirname "$0")" || exit 1
 DEV=/dev/codexmicro
 
 echo "==== 1. BUILD AND LOAD THE MODULE ===="
-make -C Module >/dev/null
+# Build inside Module so the kernel Makefile's M=$(PWD) resolves to the module
+# directory; a subshell keeps this directory change from affecting the rest of
+# the script.
+if ! ( cd Module && make >/dev/null 2>&1 ); then
+	echo "ERROR: module build failed"
+	exit 1
+fi
 # Remove any earlier copy first so the load starts from a known clean state.
 sudo rmmod codexmicro 2>/dev/null
 sudo insmod Module/codexmicro.ko
