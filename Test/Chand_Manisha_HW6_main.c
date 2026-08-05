@@ -167,6 +167,13 @@ static void push_status(int devfd, int id, enum mock_status s)
 	char msg[32];
 	int len;
 
+	/* A command with no valid agent id - for example a bare "s" with no
+	 * number - should not reach the driver as a malformed write. Ignoring it
+	 * here keeps the dashboard quiet rather than printing an error for a
+	 * harmless mistype. */
+	if (id < 0 || id >= MOCK_AGENTS)
+		return;
+
 	len = snprintf(msg, sizeof(msg), "%d:%s", id, mock_word(s));
 	if (write(devfd, msg, len) < 0)
 		perror("write status");
