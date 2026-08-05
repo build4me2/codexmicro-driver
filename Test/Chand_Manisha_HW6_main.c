@@ -193,8 +193,12 @@ static void press_key(int devfd, int ufd, int slot)
 		perror("CODEX_PRESS_KEY");
 		return;
 	}
-	while (ioctl(devfd, CODEX_GET_KEY, &keycode) == 0 && keycode >= 0)
-		uinput_inject(ufd, keycode);
+	while (ioctl(devfd, CODEX_GET_KEY, &keycode) == 0 && keycode >= 0) {
+		/* Drain the queue even when no virtual keyboard is available so a key
+		 * is never left behind; only the physical injection is skipped. */
+		if (ufd >= 0)
+			uinput_inject(ufd, keycode);
+	}
 }
 
 /*
@@ -249,12 +253,16 @@ int main(void)
 		return 1;
 	}
 
-	/* The virtual keyboard is created once and reused for every key press. */
+	/*
+	 * The virtual keyboard is created once and reused for every key press. If it
+	 * cannot be created (for example the uinput module is not loaded) the
+	 * dashboard and all driver control still work, so the program continues and
+	 * only skips the physical key injection rather than refusing to start.
+	 */
 	ufd = uinput_open();
-	if (ufd < 0) {
-		close(devfd);
-		return 1;
-	}
+	if (ufd < 0)
+		fprintf(stderr, "warning: virtual keyboard unavailable; "
+				"accept/reject will not inject real keystrokes\n");
 
 	mock_init();
 
@@ -276,7 +284,8 @@ int main(void)
 		handle(devfd, ufd, cmd, arg);
 	}
 
-	uinput_close(ufd);
+	if (ufd >= 0)
+		uinput_close(ufd);
 	close(devfd);
 	printf("\nHarness exited.\n");
 	return 0;
