@@ -58,7 +58,7 @@ firmware, which *replaces* the desktop-masquerade firmware.
 | Item | Where |
 | --- | --- |
 | Wire protocol | `codexmicro_wire.h` |
-| Daemon + notify (`loopback`, `hidraw`) | `codexmicrod.c`, `codexmicro_notify.c` |
+| Daemon + notify (`loopback`, `sim`, `hidraw`) | `codexmicrod.c`, `codexmicro_notify.c` |
 | QMK firmware handler + guide | `firmware/` |
 | Install + device setup | `install.sh`, `codexmicro-doctor`, `codexmicro-flash`, `systemd/`, `udev/` |
 | Adapters: Claude Code, Codex CLI, generic + wrapper | `adapters/claude-code/`, `adapters/codex-cli/`, `adapters/generic/`, `codexmicro-run` |
@@ -73,10 +73,9 @@ firmware, which *replaces* the desktop-masquerade firmware.
 - **A5. "Add your LLM in 2 minutes" guide.**
 
 ### Phase B — Hardware-free visual testing
-- **B1. `sim` backend** — render the six keys as colored ANSI blocks in the
-  terminal, so the daemon can be watched visually with no device (replaces the
-  removed dashboard's role, without a kernel module). *Test: statuses paint the
-  expected colors.*
+- ✅ **B1. `sim` backend** — `codexmicrod --backend sim` renders the six keys as
+  colored ANSI blocks in the terminal, so status can be watched live with no
+  device (replaces the removed dashboard's role, no kernel module). Verified.
 
 ### Phase C — Real-hardware bring-up (needs a pad, ~$60–80)
 - **C1.** Flash + confirm colors on Work Louder Micro / DOIO; verify/adjust
@@ -121,9 +120,9 @@ firmware, which *replaces* the desktop-masquerade firmware.
 
 ## Immediate next step
 
-The any-LLM core (A1–A3) is done and verified. Next is **A5** (the "add your LLM
-in 2 minutes" guide) and **B1** (a `sim` terminal backend for visual
-hardware-free testing), then **Phase C** once a pad is on hand.
+The any-LLM core (A1–A3) and the `sim` backend (B1) are done and verified. Next
+is **A5** (the "add your LLM in 2 minutes" guide), then **Phase C**
+(real-hardware bring-up) once a pad is on hand.
 
 ## Sources
 

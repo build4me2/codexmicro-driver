@@ -39,7 +39,7 @@ format):
 | Piece | State |
 | --- | --- |
 | Wire protocol (`codexmicro_wire.h`) | ✅ done |
-| Daemon + notify client | ✅ done (`loopback` + `hidraw` backends) |
+| Daemon + notify client | ✅ done (`loopback`, `sim`, `hidraw` backends) |
 | QMK firmware handler + flashing guide | ✅ done |
 | Install / device-setup tooling | ✅ done (`install.sh`, `codexmicro-doctor`, `codexmicro-flash`) |
 | Adapters: Claude Code, Codex CLI, generic (`codexmicro-run`) | ✅ done |
@@ -68,9 +68,10 @@ Try it with no hardware first:
 
 ```bash
 make
-./codexmicrod --backend loopback &
-codexmicro-notify 0 thinking     # prints the report it would send
-codexmicro-notify 0 done
+./codexmicrod --backend loopback &     # prints each report; or run
+# ./codexmicrod --backend sim          # a live colored panel of the six keys
+codexmicro-notify 0 thinking
+codexmicro-notify 1 done
 ```
 
 ## Any LLM — how

@@ -4,9 +4,10 @@
 * Description:: The Codex Micro bridge daemon. It listens on a Unix socket for
 * short "<agent-id> <status>" messages from LLM adapters, turns each status
 * into a color, and drives a device backend: "loopback" prints what would be
-* sent (so the whole pipeline can be watched with no hardware), and "hidraw"
-* sends a 32-byte Raw HID report to a real QMK device. This is what lets any
-* LLM's live agent status reach the keys, independent of which LLM produced it.
+* sent, "sim" renders the keys as colored blocks in the terminal (both need no
+* hardware), and "hidraw" sends a 32-byte Raw HID report to a real QMK device.
+* This is what lets any LLM's live agent status reach the keys, independent of
+* which LLM produced it.
 *
 **************************************************************/
 
@@ -23,7 +24,7 @@
 
 #define DEFAULT_SOCKET "/tmp/codexmicrod.sock"
 
-enum backend { BK_LOOPBACK, BK_HIDRAW };
+enum backend { BK_LOOPBACK, BK_HIDRAW, BK_SIM };
 
 /* Remembered at file scope so the signal handler can remove the socket file it
  * created; a stale file would otherwise block the next run from binding. */
@@ -45,8 +46,35 @@ static const char *backend_name(enum backend bk)
 {
 	switch (bk) {
 	case BK_HIDRAW: return "hidraw";
+	case BK_SIM:    return "sim";
 	default:        return "loopback";
 	}
+}
+
+/*
+ * The "sim" backend renders the agent keys as colored blocks in this terminal,
+ * so the whole pipeline can be watched visually with no hardware. It keeps each
+ * key's latest status and repaints the panel on every change. The count mirrors
+ * the real device's six status keys; statuses for higher ids are ignored, and
+ * the all-idle starting state is the array's zero value.
+ */
+#define SIM_AGENTS 6
+static enum cm_status g_sim[SIM_AGENTS];
+
+static void sim_render(void)
+{
+	unsigned char r, g, b;
+	int i;
+
+	printf("\033[2J\033[H");  /* clear the screen and move to the top */
+	printf("Codex Micro - agent status (sim; Ctrl-C to quit)\n\n");
+	for (i = 0; i < SIM_AGENTS; i++) {
+		cm_default_color(g_sim[i], &r, &g, &b);
+		/* A 24-bit background block shows the color; the word names it. */
+		printf("  agent %d  \033[48;2;%u;%u;%um      \033[0m  %s\n",
+		       i, r, g, b, cm_word(g_sim[i]));
+	}
+	fflush(stdout);
 }
 
 /*
@@ -84,14 +112,22 @@ static void send_status(enum backend bk, int devfd, int agent, enum cm_status s)
 		if (write(devfd, framed, CM_REPORT_LEN + 1) < 0)
 			perror("write hidraw");
 		break;
+
+	case BK_SIM:
+		/* Record this key's status and repaint the whole panel. */
+		if (agent < SIM_AGENTS)
+			g_sim[agent] = s;
+		sim_render();
+		break;
 	}
 }
 
 static void usage(const char *prog)
 {
 	fprintf(stderr,
-		"usage: %s [--backend loopback|hidraw] [--device PATH] [--socket PATH]\n"
+		"usage: %s [--backend loopback|sim|hidraw] [--device PATH] [--socket PATH]\n"
 		"  loopback  print each status change (default; no hardware)\n"
+		"  sim       show the keys as colored blocks in this terminal (no hardware)\n"
 		"  hidraw    drive a real QMK device at /dev/hidrawN (needs --device)\n",
 		prog);
 }
@@ -111,6 +147,7 @@ int main(int argc, char **argv)
 		if (!strcmp(argv[i], "--backend") && i + 1 < argc) {
 			const char *b = argv[++i];
 			if      (!strcmp(b, "loopback")) bk = BK_LOOPBACK;
+			else if (!strcmp(b, "sim"))      bk = BK_SIM;
 			else if (!strcmp(b, "hidraw"))   bk = BK_HIDRAW;
 			else { usage(argv[0]); return 1; }
 		} else if (!strcmp(argv[i], "--device") && i + 1 < argc) {
@@ -157,6 +194,10 @@ int main(int argc, char **argv)
 	printf("codexmicrod: listening on %s (backend: %s)\n",
 	       g_socket_path, backend_name(bk));
 	fflush(stdout);
+
+	/* Show the initial all-idle panel right away in sim mode. */
+	if (bk == BK_SIM)
+		sim_render();
 
 	/* --- receive "<agent> <status>" messages and drive the device --- */
 	for (;;) {
