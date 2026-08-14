@@ -1,11 +1,3 @@
 *.o
-*.ko
-*.mod
-*.mod.c
-*.mod.o
-*.cmd
-*.symvers
-modules.order
-.tmp_versions/
-.module-common.o
-phase3_test
+codexmicrod
+codexmicro-notify

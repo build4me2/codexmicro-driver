@@ -21,7 +21,7 @@ id — change it (or add more events) if you track several agents.
 
 1. Make sure the daemon is running and `codexmicro-notify` is on your `PATH`:
    ```bash
-   codexmicrod --backend hidraw --device /dev/hidrawN   # or --backend virtual for testing
+   codexmicrod --backend hidraw --device /dev/hidrawN   # or --backend loopback for testing
    ```
 2. Merge `hooks.json` into your Claude Code settings — either
    `~/.claude/settings.json` (all projects) or `.claude/settings.json` (one

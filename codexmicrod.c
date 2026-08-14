@@ -4,11 +4,9 @@
 * Description:: The Codex Micro bridge daemon. It listens on a Unix socket for
 * short "<agent-id> <status>" messages from LLM adapters, turns each status
 * into a color, and drives a device backend: "loopback" prints what would be
-* sent (so the whole pipeline can be watched with no hardware), "virtual"
-* writes to the existing /dev/codexmicro device (reusing the current driver and
-* dashboard), and "hidraw" sends a 32-byte Raw HID report to a real QMK device.
-* This is what lets any LLM's live agent status reach the keys, independent of
-* which LLM produced it.
+* sent (so the whole pipeline can be watched with no hardware), and "hidraw"
+* sends a 32-byte Raw HID report to a real QMK device. This is what lets any
+* LLM's live agent status reach the keys, independent of which LLM produced it.
 *
 **************************************************************/
 
@@ -25,7 +23,7 @@
 
 #define DEFAULT_SOCKET "/tmp/codexmicrod.sock"
 
-enum backend { BK_LOOPBACK, BK_VIRTUAL, BK_HIDRAW };
+enum backend { BK_LOOPBACK, BK_HIDRAW };
 
 /* Remembered at file scope so the signal handler can remove the socket file it
  * created; a stale file would otherwise block the next run from binding. */
@@ -46,9 +44,8 @@ static void on_signal(int sig)
 static const char *backend_name(enum backend bk)
 {
 	switch (bk) {
-	case BK_VIRTUAL: return "virtual";
-	case BK_HIDRAW:  return "hidraw";
-	default:         return "loopback";
+	case BK_HIDRAW: return "hidraw";
+	default:        return "loopback";
 	}
 }
 
@@ -61,8 +58,7 @@ static void send_status(enum backend bk, int devfd, int agent, enum cm_status s)
 	unsigned char r, g, b;
 	unsigned char report[CM_REPORT_LEN];
 	unsigned char framed[CM_REPORT_LEN + 1];
-	char line[32];
-	int i, len;
+	int i;
 
 	cm_default_color(s, &r, &g, &b);
 
@@ -77,15 +73,6 @@ static void send_status(enum backend bk, int devfd, int agent, enum cm_status s)
 			printf(" %02x", report[i]);
 		printf(" ...\n");
 		fflush(stdout);
-		break;
-
-	case BK_VIRTUAL:
-		/* The existing virtual device accepts a "<id>:<WORD>" status write,
-		 * so pointing the bridge at it makes the current dashboard show the
-		 * exact status the daemon would light on real hardware. */
-		len = snprintf(line, sizeof(line), "%d:%s", agent, cm_word(s));
-		if (write(devfd, line, len) < 0)
-			perror("write /dev/codexmicro");
 		break;
 
 	case BK_HIDRAW:
@@ -103,9 +90,8 @@ static void send_status(enum backend bk, int devfd, int agent, enum cm_status s)
 static void usage(const char *prog)
 {
 	fprintf(stderr,
-		"usage: %s [--backend loopback|virtual|hidraw] [--device PATH] [--socket PATH]\n"
+		"usage: %s [--backend loopback|hidraw] [--device PATH] [--socket PATH]\n"
 		"  loopback  print each status change (default; no hardware)\n"
-		"  virtual   drive the existing /dev/codexmicro device\n"
 		"  hidraw    drive a real QMK device at /dev/hidrawN (needs --device)\n",
 		prog);
 }
@@ -125,7 +111,6 @@ int main(int argc, char **argv)
 		if (!strcmp(argv[i], "--backend") && i + 1 < argc) {
 			const char *b = argv[++i];
 			if      (!strcmp(b, "loopback")) bk = BK_LOOPBACK;
-			else if (!strcmp(b, "virtual"))  bk = BK_VIRTUAL;
 			else if (!strcmp(b, "hidraw"))   bk = BK_HIDRAW;
 			else { usage(argv[0]); return 1; }
 		} else if (!strcmp(argv[i], "--device") && i + 1 < argc) {
@@ -139,15 +124,7 @@ int main(int argc, char **argv)
 	}
 
 	/* --- open the device backend (loopback needs none) --- */
-	if (bk == BK_VIRTUAL) {
-		if (!device)
-			device = "/dev/codexmicro";
-		devfd = open(device, O_WRONLY);
-		if (devfd < 0) {
-			perror(device);
-			return 1;
-		}
-	} else if (bk == BK_HIDRAW) {
+	if (bk == BK_HIDRAW) {
 		if (!device) {
 			fprintf(stderr, "hidraw backend needs --device /dev/hidrawN\n");
 			return 1;

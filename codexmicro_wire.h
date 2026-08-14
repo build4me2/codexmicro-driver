@@ -2,11 +2,10 @@
 * File:: codexmicro_wire.h
 *
 * Description:: Shared contract between the Codex Micro bridge daemon and the
-* programs that feed it status. It defines the agent-status vocabulary (the
-* same words the virtual device already understands), the default
-* status-to-color mapping, and the fixed-size report a QMK device expects over
-* Raw HID. Keeping all of this in one header means the daemon, the notify
-* client, and the firmware protocol can never drift apart.
+* programs that feed it status. It defines the agent-status vocabulary, the
+* default status-to-color mapping, and the fixed-size report a QMK device
+* expects over Raw HID. Keeping all of this in one header means the daemon, the
+* notify client, and the firmware protocol can never drift apart.
 *
 **************************************************************/
 
@@ -17,9 +16,9 @@
 #include <strings.h>  /* strcasecmp */
 
 /*
- * The status an agent can report, as the whole system understands it. The set
- * deliberately matches the words the virtual /dev/codexmicro device already
- * accepts, so the bridge and the existing driver speak one language.
+ * The status an agent can report, as the whole system understands it. This one
+ * enumeration is the shared vocabulary every part of the bridge speaks, so an
+ * adapter, the daemon, and the firmware never disagree about what a status is.
  */
 enum cm_status {
 	CM_IDLE,
@@ -31,10 +30,9 @@ enum cm_status {
 };
 
 /*
- * The canonical uppercase word for a status. This is also the exact token the
- * virtual device expects inside a "<id>:<WORD>" write, so the same function
- * serves both display and that backend. An unknown value reads as idle so the
- * output is always well-formed.
+ * The canonical uppercase word for a status, used in log output and in the
+ * text a notify client sends. An unknown value reads as idle so the output is
+ * always well-formed.
  */
 static inline const char *cm_word(enum cm_status s)
 {
