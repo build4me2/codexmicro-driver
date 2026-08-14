@@ -70,7 +70,7 @@ firmware, which *replaces* the desktop-masquerade firmware.
 - ✅ **A2. Generic adapter** — `adapters/generic/`: the one-liner pattern any tool/script can use.
 - ✅ **A3. Wrapper** — `codexmicro-run <cmd…>` reports thinking→done/error for a hook-less tool and passes the command's exit code through. Verified.
 - **A4. More first-class adapters** as demand shows (Ollama, aider, Gemini CLI…).
-- **A5. "Add your LLM in 2 minutes" guide.**
+- ✅ **A5. "Add your LLM in ~2 minutes" guide** — `adapters/README.md`.
 
 ### Phase B — Hardware-free visual testing
 - ✅ **B1. `sim` backend** — `codexmicrod --backend sim` renders the six keys as
@@ -120,9 +120,11 @@ firmware, which *replaces* the desktop-masquerade firmware.
 
 ## Immediate next step
 
-The any-LLM core (A1–A3) and the `sim` backend (B1) are done and verified. Next
-is **A5** (the "add your LLM in 2 minutes" guide), then **Phase C**
-(real-hardware bring-up) once a pad is on hand.
+The any-LLM core (A1–A3), the `sim` backend (B1), and the connect-your-LLM guide
+(A5) are done and verified — the whole system runs end to end with no hardware.
+The remaining software items are optional polish (A4 more first-class adapters,
+Phases D/E); the only essential piece left, **Phase C** (real-hardware
+bring-up), needs a physical pad.
 
 ## Sources
 

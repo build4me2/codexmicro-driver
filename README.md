@@ -80,13 +80,12 @@ The daemon and protocol are provider-neutral; the only place an LLM is named is
 the adapter. Three tiers cover everything:
 
 1. **First-class adapters** for runners with a hook system (Claude Code ✅,
-   Codex CLI, …) — a tiny config maps lifecycle events to `codexmicro-notify`.
+   Codex CLI ✅) — a tiny config maps lifecycle events to `codexmicro-notify`.
 2. **Generic path** — *any* tool or script calls `codexmicro-notify 0 thinking`
    directly. One line makes any LLM work.
-3. **Wrapper** — for tools with no hooks, a launcher infers status from the
-   command's lifecycle.
+3. **Wrapper** — `codexmicro-run <cmd>` for tools with no hooks.
 
-See [`adapters/`](adapters/).
+**→ [Connect your LLM in ~2 minutes](adapters/README.md)**
 
 ## Components
 
