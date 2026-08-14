@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "codexmicro-notify 0 thinking" } ] }
+    ],
+    "PreToolUse": [
+      { "hooks": [ { "type": "command", "command": "codexmicro-notify 0 thinking" } ] }
+    ],
+    "PermissionRequest": [
+      { "hooks": [ { "type": "command", "command": "codexmicro-notify 0 needs_input" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "codexmicro-notify 0 done" } ] }
+    ]
+  }
+}

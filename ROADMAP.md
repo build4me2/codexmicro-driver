@@ -61,19 +61,14 @@ firmware, which *replaces* the desktop-masquerade firmware.
 | Daemon + notify (`loopback`, `hidraw`) | `codexmicrod.c`, `codexmicro_notify.c` |
 | QMK firmware handler + guide | `firmware/` |
 | Install + device setup | `install.sh`, `codexmicro-doctor`, `codexmicro-flash`, `systemd/`, `udev/` |
-| Claude Code adapter | `adapters/claude-code/` |
+| Adapters: Claude Code, Codex CLI, generic + wrapper | `adapters/claude-code/`, `adapters/codex-cli/`, `adapters/generic/`, `codexmicro-run` |
 
 ## Remaining work
 
-### Phase A — Any-LLM adapter layer (current focus)
-- **A1. Codex CLI adapter** — a `hooks.json` mapping Codex CLI events →
-  `codexmicro-notify` (gives terminal Codex users status the official product
-  denies them). *Test: loopback shows the mapped lifecycle.*
-- **A2. Generic adapter** — a documented one-liner + tiny helper so any tool or
-  script reports status. *Test: a shell loop drives loopback.*
-- **A3. Wrapper** — `codexmicro-run <cmd…>` that launches a hook-less tool and
-  infers status from its lifecycle (start→thinking, waiting→needs_input,
-  exit→done). *Test: wrap a scripted fake tool; verify transitions.*
+### Phase A — Any-LLM adapter layer
+- ✅ **A1. Codex CLI adapter** — `adapters/codex-cli/` (UserPromptSubmit/PreToolUse→thinking, PermissionRequest→needs_input, Stop→done). Verified against loopback.
+- ✅ **A2. Generic adapter** — `adapters/generic/`: the one-liner pattern any tool/script can use.
+- ✅ **A3. Wrapper** — `codexmicro-run <cmd…>` reports thinking→done/error for a hook-less tool and passes the command's exit code through. Verified.
 - **A4. More first-class adapters** as demand shows (Ollama, aider, Gemini CLI…).
 - **A5. "Add your LLM in 2 minutes" guide.**
 
@@ -126,9 +121,9 @@ firmware, which *replaces* the desktop-masquerade firmware.
 
 ## Immediate next step
 
-**Phase A1 + A2** — the Codex CLI adapter and the generic adapter. Both are
-testable against `loopback` today, and together they make the bridge genuinely
-any-LLM rather than "Claude Code plus a promise."
+The any-LLM core (A1–A3) is done and verified. Next is **A5** (the "add your LLM
+in 2 minutes" guide) and **B1** (a `sim` terminal backend for visual
+hardware-free testing), then **Phase C** once a pad is on hand.
 
 ## Sources
 

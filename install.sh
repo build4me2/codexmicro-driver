@@ -22,7 +22,7 @@ make >/dev/null
 
 echo "Installing programs      -> $BINDIR"
 mkdir -p "$BINDIR"
-install -m 0755 codexmicrod codexmicro-notify codexmicro-doctor codexmicro-flash "$BINDIR/"
+install -m 0755 codexmicrod codexmicro-notify codexmicro-doctor codexmicro-flash codexmicro-run "$BINDIR/"
 
 echo "Installing systemd unit  -> $UNITDIR/codexmicrod.service"
 mkdir -p "$UNITDIR"

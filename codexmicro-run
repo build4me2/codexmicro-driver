@@ -1,0 +1,46 @@
+#!/bin/bash
+#**************************************************************
+#* File:: codexmicro-run
+#*
+#* Description:: Runs any command as an "agent" and reports its status to the
+#* bridge, for LLM tools that have no hook system. It reports "thinking" while
+#* the command runs and "done" or "error" when it exits, then passes the
+#* command's own exit code through. Configure with CODEXMICRO_AGENT (which key,
+#* default 0), CODEXMICRO_SOCKET (daemon socket), and CODEXMICRO_NOTIFY (path to
+#* the notify client, default: found on PATH).
+#*
+#* Example:  codexmicro-run ollama run llama3 "refactor this file"
+#*
+#**************************************************************
+
+NOTIFY="${CODEXMICRO_NOTIFY:-codexmicro-notify}"
+AGENT="${CODEXMICRO_AGENT:-0}"
+
+# Pass the daemon socket through only when one was chosen, so the default path
+# keeps working with no extra configuration.
+SOCK_ARGS=()
+if [ -n "${CODEXMICRO_SOCKET:-}" ]; then
+	SOCK_ARGS=(--socket "$CODEXMICRO_SOCKET")
+fi
+
+if [ "$#" -lt 1 ]; then
+	echo "usage: codexmicro-run <command> [args...]" >&2
+	echo "  reports 'thinking' while the command runs, then 'done' or 'error'." >&2
+	exit 1
+fi
+
+# A failed status report (e.g. the daemon is not running) must never stop the
+# user's command from running, so the notify call is best-effort.
+notify() {
+	"$NOTIFY" "$AGENT" "$1" "${SOCK_ARGS[@]}" 2>/dev/null || true
+}
+
+notify thinking
+"$@"
+rc=$?
+if [ "$rc" -eq 0 ]; then
+	notify done
+else
+	notify error
+fi
+exit "$rc"

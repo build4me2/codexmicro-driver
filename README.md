@@ -42,8 +42,8 @@ format):
 | Daemon + notify client | ✅ done (`loopback` + `hidraw` backends) |
 | QMK firmware handler + flashing guide | ✅ done |
 | Install / device-setup tooling | ✅ done (`install.sh`, `codexmicro-doctor`, `codexmicro-flash`) |
-| Claude Code adapter | ✅ done |
-| More adapters (Codex CLI, generic, wrapper) | ⏳ see [ROADMAP](ROADMAP.md) |
+| Adapters: Claude Code, Codex CLI, generic (`codexmicro-run`) | ✅ done |
+| More first-class adapters, `sim` backend, hardware bring-up | ⏳ see [ROADMAP](ROADMAP.md) |
 
 The whole pipeline is testable with **no hardware** via the `loopback` backend.
 
@@ -95,7 +95,9 @@ See [`adapters/`](adapters/).
 | `codexmicrod.c` | Daemon: socket intake → color → device backend |
 | `codexmicro_notify.c` | One-shot client adapters call to report status |
 | `firmware/` | QMK `raw_hid_receive` handler + flashing guide |
-| `adapters/` | Per-LLM hook configs |
+| `adapters/claude-code`, `adapters/codex-cli` | First-class hook adapters |
+| `adapters/generic` | The universal path for any other LLM/tool |
+| `codexmicro-run` | Wrapper that reports status for a hook-less tool |
 | `codexmicro-flash` | Generate a keymap from the board default and flash |
 | `codexmicro-doctor` | Auto-detect the pad and write its udev rule |
 | `install.sh`, `systemd/`, `udev/` | User-service install + device access |
