@@ -73,6 +73,7 @@ per transition. Shell and Python examples are in [`generic/`](generic/).
 ## Test it with no hardware
 
 ```bash
-codexmicrod --backend sim          # a live colored panel in this terminal
+codexmicrod --backend sim --label 0=frontend --label 1=backend
+# a live colored panel in this terminal, one row per key; --label names a key
 # …then drive it from your LLM (any path above) and watch the keys change
 ```

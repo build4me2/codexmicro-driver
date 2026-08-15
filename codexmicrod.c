@@ -12,6 +12,7 @@
 **************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
@@ -61,19 +62,55 @@ static const char *backend_name(enum backend bk)
 #define SIM_AGENTS 6
 static enum cm_status g_sim[SIM_AGENTS];
 
-static void sim_render(void)
+/* Optional display name per key, set with "--label N=name"; a NULL entry falls
+ * back to "agent N" so the panel is readable with or without names. */
+static const char *g_label[SIM_AGENTS];
+
+/*
+ * Print a colored block `width` cells wide for a status, then its word. Shared
+ * by the agent rows (wide blocks) and the legend (small blocks) so the colors
+ * stay identical between them.
+ */
+static void sim_swatch(enum cm_status s, int width, const char *text)
 {
 	unsigned char r, g, b;
+
+	cm_default_color(s, &r, &g, &b);
+	printf("\033[48;2;%u;%u;%um%*s\033[0m  %s", r, g, b, width, "", text);
+}
+
+static void sim_render(void)
+{
+	static const enum cm_status legend[] = {
+		CM_THINKING, CM_NEEDS_INPUT, CM_DONE, CM_ERROR, CM_IDLE
+	};
+	char fallback[16];
+	const char *label;
+	size_t k;
 	int i;
 
 	printf("\033[2J\033[H");  /* clear the screen and move to the top */
 	printf("Codex Micro - agent status (sim; Ctrl-C to quit)\n\n");
+
+	/* One row per key: its name, a colored block, and the status word. */
 	for (i = 0; i < SIM_AGENTS; i++) {
-		cm_default_color(g_sim[i], &r, &g, &b);
-		/* A 24-bit background block shows the color; the word names it. */
-		printf("  agent %d  \033[48;2;%u;%u;%um      \033[0m  %s\n",
-		       i, r, g, b, cm_word(g_sim[i]));
+		label = g_label[i];
+		if (!label) {
+			snprintf(fallback, sizeof(fallback), "agent %d", i);
+			label = fallback;
+		}
+		printf("  %-12s ", label);
+		sim_swatch(g_sim[i], 6, cm_word(g_sim[i]));
+		printf("\n");
 	}
+
+	/* A compact legend so the colors are self-explanatory. */
+	printf("\n  legend: ");
+	for (k = 0; k < sizeof(legend) / sizeof(legend[0]); k++) {
+		sim_swatch(legend[k], 2, cm_word(legend[k]));
+		printf("   ");
+	}
+	printf("\n");
 	fflush(stdout);
 }
 
@@ -126,9 +163,11 @@ static void usage(const char *prog)
 {
 	fprintf(stderr,
 		"usage: %s [--backend loopback|sim|hidraw] [--device PATH] [--socket PATH]\n"
+		"       [--label N=name ...]\n"
 		"  loopback  print each status change (default; no hardware)\n"
 		"  sim       show the keys as colored blocks in this terminal (no hardware)\n"
-		"  hidraw    drive a real QMK device at /dev/hidrawN (needs --device)\n",
+		"  hidraw    drive a real QMK device at /dev/hidrawN (needs --device)\n"
+		"  --label   name a key in the sim panel, e.g. --label 0=frontend\n",
 		prog);
 }
 
@@ -154,6 +193,17 @@ int main(int argc, char **argv)
 			device = argv[++i];
 		} else if (!strcmp(argv[i], "--socket") && i + 1 < argc) {
 			g_socket_path = argv[++i];
+		} else if (!strcmp(argv[i], "--label") && i + 1 < argc) {
+			/* "--label N=name" gives key N a display name in the sim panel. */
+			char *spec = argv[++i];
+			char *eq = strchr(spec, '=');
+			if (eq) {
+				int id;
+				*eq = '\0';
+				id = atoi(spec);
+				if (id >= 0 && id < SIM_AGENTS)
+					g_label[id] = eq + 1;
+			}
 		} else {
 			usage(argv[0]);
 			return 1;

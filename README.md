@@ -76,7 +76,7 @@ Try it with no hardware first:
 ```bash
 make
 ./codexmicrod --backend loopback &     # prints each report; or run
-# ./codexmicrod --backend sim          # a live colored panel of the six keys
+# ./codexmicrod --backend sim --label 0=frontend   # a live colored panel + legend
 codexmicro-notify 0 thinking
 codexmicro-notify 1 done
 ```

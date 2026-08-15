@@ -75,7 +75,9 @@ firmware, which *replaces* the desktop-masquerade firmware.
 ### Phase B — Hardware-free visual testing
 - ✅ **B1. `sim` backend** — `codexmicrod --backend sim` renders the six keys as
   colored ANSI blocks in the terminal, so status can be watched live with no
-  device (replaces the removed dashboard's role, no kernel module). Verified.
+  device (replaces the removed dashboard's role, no kernel module). Each row
+  carries a name (`--label N=name`, default `agent N`) and a color legend is
+  drawn below, so the panel is self-explanatory. Verified.
 
 ### Phase C — Real-hardware bring-up (needs a pad, ~$60–80)
 - **C1.** Flash + confirm colors on Work Louder Micro / DOIO; verify/adjust
