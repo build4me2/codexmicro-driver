@@ -1,5 +1,7 @@
 # Codex Micro Bridge
 
+[![CI](https://github.com/build4me2/codexmicro-driver/actions/workflows/ci.yml/badge.svg)](https://github.com/build4me2/codexmicro-driver/actions/workflows/ci.yml)
+
 Show **any** LLM coding agent's live status on the RGB keys of a QMK macropad —
 a real Codex Micro, a Work Louder Micro, a DOIO, or a 3D-printed DIY build — on
 **Linux**, from the **terminal/CLI**.
@@ -109,4 +111,4 @@ the adapter. Three tiers cover everything:
 
 ## License
 
-TBD.
+[MIT](LICENSE) © Manisha Chand.

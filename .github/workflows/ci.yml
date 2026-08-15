@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build daemon (strict, warnings are errors)
+        run: |
+          gcc -Wall -Wextra -Werror -I. -c codexmicrod.c -o /dev/null
+          gcc -Wall -Wextra -Werror -I. -c codexmicro_notify.c -o /dev/null
+          make
+
+      - name: Syntax-check the QMK firmware handler
+        run: |
+          mkdir -p .qmkstub
+          printf '#include <stdint.h>\n#include <stdbool.h>\nvoid rgb_matrix_set_color(int, uint8_t, uint8_t, uint8_t);\n' > .qmkstub/qmk_stub.h
+          : > .qmkstub/raw_hid.h
+          gcc -fsyntax-only -Wall -Wextra -I.qmkstub -DQMK_KEYBOARD_H='"qmk_stub.h"' firmware/codexmicro_agent_keys.c
+
+      - name: Lint the shell scripts
+        run: shellcheck -S error codexmicro-doctor codexmicro-flash codexmicro-run install.sh
+
+      - name: Validate adapter hook JSON
+        run: for j in adapters/*/hooks.json; do python3 -m json.tool "$j" > /dev/null; done
+
+      - name: Loopback smoke test (the whole pipeline, no hardware)
+        run: |
+          ./codexmicrod --backend loopback --socket /tmp/ci.sock > /tmp/ci.log 2>&1 &
+          for _ in $(seq 1 100); do [ -S /tmp/ci.sock ] && break; sleep 0.05; done
+          ./codexmicro-notify 0 thinking --socket /tmp/ci.sock
+          sleep 0.3
+          kill %1 2>/dev/null || true
+          grep -q 'agent 0 -> THINKING' /tmp/ci.log

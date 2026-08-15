@@ -89,8 +89,10 @@ firmware, which *replaces* the desktop-masquerade firmware.
 - **D3.** Dial/joystick → LLM parameters where the board has them.
 
 ### Phase E — Packaging & release
-- **E1.** Versioned releases, a LICENSE, and CI (build the daemon, `-Wall
-  -Wextra`; syntax-check firmware against QMK stubs; `shellcheck` the scripts).
+- ✅ **E1a.** LICENSE (MIT) + CI (`.github/workflows/ci.yml`: strict `-Werror`
+  build, firmware syntax-check against QMK stubs, `shellcheck`, JSON validation,
+  loopback smoke test).
+- **E1b.** Versioned releases / tags still to do.
 - **E2.** Consider renaming the repo (`…-driver` → `…-bridge`) now that it is not
   a kernel driver.
 
