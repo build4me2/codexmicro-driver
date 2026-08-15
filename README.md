@@ -43,11 +43,16 @@ format):
 | QMK firmware handler + flashing guide | ✅ done |
 | Install / device-setup tooling | ✅ done (`install.sh`, `codexmicro-doctor`, `codexmicro-flash`) |
 | Adapters: Claude Code, Codex CLI, generic (`codexmicro-run`) | ✅ done |
-| More first-class adapters, `sim` backend, hardware bring-up | ⏳ see [ROADMAP](ROADMAP.md) |
+| Connect-your-LLM guide | ✅ done ([`adapters/README.md`](adapters/README.md)) |
+| More first-class adapters (Ollama, aider…), real-hardware bring-up | ⏳ see [ROADMAP](ROADMAP.md) |
 
-The whole pipeline is testable with **no hardware** via the `loopback` backend.
+The whole pipeline is testable with **no hardware** — `loopback` (text) or
+`sim` (a live colored panel of the six keys).
 
 ## Quick start
+
+**Requirements:** Linux, `gcc` + `make` (for the daemon); the
+[QMK CLI](https://docs.qmk.fm/#/newbs_getting_started) only for flashing (step 2).
 
 ```bash
 # 1. build + install the daemon and tools (systemd user service)
